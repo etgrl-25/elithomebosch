@@ -1,4 +1,4 @@
-export type AuthEnv={DB?:D1Database;ADMIN_EMAIL?:string;ELIT_HOME_PASSWORD?:string};
+export type AuthEnv={DB?:D1Database;ADMIN_EMAIL?:string;ALLOWED_EMAILS?:string;ELIT_HOME_PASSWORD?:string};
 const cookieName='__Host-elit_session';
 const hex=(b:ArrayBuffer)=>Array.from(new Uint8Array(b),v=>v.toString(16).padStart(2,'0')).join('');
 export async function digest(s:string){return hex(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(s)))}
@@ -7,6 +7,7 @@ function loginPage(error='',ready=true){return new Response('<!doctype html><htm
 export async function authenticate(request:Request,env:AuthEnv):Promise<Request|Response>{
  const url=new URL(request.url),db=env.DB;
  const ready=!!db&&!!env.ADMIN_EMAIL&&!!env.ELIT_HOME_PASSWORD&&env.ELIT_HOME_PASSWORD.length>=14;
+ const allowedEmails=new Set([env.ADMIN_EMAIL??'',...(env.ALLOWED_EMAILS??'').split(',')].map(e=>e.trim().toLowerCase()).filter(Boolean));
  const headers=new Headers(request.headers);
  for(const key of [...headers.keys()])if(key.startsWith('oai-authenticated-user-'))headers.delete(key);
  if(!['GET','HEAD','OPTIONS'].includes(request.method)&&request.headers.get('Origin')!==url.origin)return new Response('İstek doğrulanamadı.',{status:403});
@@ -20,7 +21,7 @@ export async function authenticate(request:Request,env:AuthEnv):Promise<Request|
  if(!counter||counter.attempts>10)return new Response('Çok fazla giriş denemesi. 15 dakika sonra tekrar deneyin.',{status:429,headers:{'Retry-After':'900'}});
  const form=await request.formData().catch(()=>null),email=String(form?.get('email')||'').trim().toLowerCase(),password=String(form?.get('password')||'');
  const valid=await passwordsEqual(password.slice(0,256),env.ELIT_HOME_PASSWORD!);
- if(email!==env.ADMIN_EMAIL!.trim().toLowerCase()||password.length>256||!valid)return loginPage('E-posta veya şifre hatalı.');
+ if(!allowedEmails.has(email)||password.length>256||!valid)return loginPage('E-posta veya şifre hatalı.');
  const token=hex(crypto.getRandomValues(new Uint8Array(32)).buffer);
  await db!.batch([db!.prepare('DELETE FROM sessions WHERE expires_at < ?').bind(now),db!.prepare('DELETE FROM login_attempts WHERE expires_at < ?').bind(now),db!.prepare('INSERT INTO sessions (token_hash,email,expires_at) VALUES (?,?,?)').bind(await digest(token+env.ELIT_HOME_PASSWORD),email,now+604800000)]);
  return new Response(null,{status:303,headers:{Location:'/', 'Set-Cookie':cookieName+'='+token+'; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=604800','Cache-Control':'no-store'}});
@@ -31,7 +32,7 @@ export async function authenticate(request:Request,env:AuthEnv):Promise<Request|
  if(raw&&db)await db.prepare('DELETE FROM sessions WHERE token_hash=?').bind(await digest(raw+env.ELIT_HOME_PASSWORD)).run();
  return new Response(null,{status:303,headers:{Location:'/login','Set-Cookie':cookieName+'=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0','Cache-Control':'no-store'}});
  }
- if(!session||session.email!==env.ADMIN_EMAIL?.trim().toLowerCase())return url.pathname.startsWith('/api/')?Response.json({error:'Giriş gerekli.'},{status:401,headers:{'Cache-Control':'no-store'}}):new Response(null,{status:302,headers:{Location:'/login','Cache-Control':'no-store'}});
+ if(!session||!allowedEmails.has(session.email))return url.pathname.startsWith('/api/')?Response.json({error:'Giriş gerekli.'},{status:401,headers:{'Cache-Control':'no-store'}}):new Response(null,{status:302,headers:{Location:'/login','Cache-Control':'no-store'}});
  headers.set('oai-authenticated-user-id','elithome-owner');
  headers.set('oai-authenticated-user-email',session.email);
  return new Request(request,{headers});

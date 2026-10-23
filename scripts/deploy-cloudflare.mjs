@@ -15,4 +15,3 @@ for(const args of [
  if(result.status!==0)process.exit(result.status||1);
 }
 
-

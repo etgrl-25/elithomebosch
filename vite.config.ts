@@ -19,7 +19,7 @@ const localBindingConfig = {
   name: "elithomebosch",
   account_id: "54361aa6b292a3867c461a569b61c627",
   compatibility_date: "2026-10-23",
-  vars: { ADMIN_EMAIL: "ertugrulerturann@gmail.com" },
+  vars: { ADMIN_EMAIL: "ertugrulerturann@gmail.com", ALLOWED_EMAILS: "elithome.erzurum@gmail.com,sukrupasaelithome@gmail.com,elithome.boscherzurum@gmail.com" },
   main: "./worker/index.ts",
   compatibility_flags: ["nodejs_compat"],
   d1_databases: d1
