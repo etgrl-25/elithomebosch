@@ -66,6 +66,7 @@ export default defineConfig(async ({ command }) => {
         inspectorPort: false,
         config: {
           ...localBindingConfig,
+          ...(command === "serve" ? { compatibility_date: "2026-05-15" } : {}),
           ...(command === "serve"
             ? {
                 services: [

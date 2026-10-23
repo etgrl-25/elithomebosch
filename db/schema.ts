@@ -3,6 +3,7 @@ export const sales = sqliteTable('sales', {
  id:text('id').primaryKey(),owner:text('owner').notNull(),amount:integer('amount').notNull(),
  payment:text('payment').notNull(),note:text('note').notNull(),soldAt:text('sold_at').notNull(),
  cancelled:integer('cancelled').notNull().default(0),
+ installments:integer('installments').notNull().default(1),
 });
 export const products = sqliteTable('products', {
  id:text('id').primaryKey(),owner:text('owner').notNull(),name:text('name').notNull(),

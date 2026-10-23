@@ -37,3 +37,4 @@ export async function authenticate(request:Request,env:AuthEnv):Promise<Request|
  headers.set('oai-authenticated-user-email',session.email);
  return new Request(request,{headers});
 }
+
