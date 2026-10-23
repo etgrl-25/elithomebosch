@@ -16,14 +16,19 @@ const isCodexSeatbeltSandbox = process.env.CODEX_SANDBOX === "seatbelt";
 const managedLinux = readExecutionProfile() === "managed-linux";
 
 const localBindingConfig = {
+  name: "elithomebosch",
+  account_id: "54361aa6b292a3867c461a569b61c627",
+  compatibility_date: "2026-10-23",
+  vars: { ADMIN_EMAIL: "ertugrulerturann@gmail.com" },
   main: "./worker/index.ts",
   compatibility_flags: ["nodejs_compat"],
   d1_databases: d1
     ? [
         {
           binding: d1,
-          database_name: "site-creator-d1",
-          database_id: SITE_CREATOR_PLACEHOLDER_DATABASE_ID,
+          database_name: "elithomebosch-db",
+          migrations_dir: "./drizzle",
+          database_id: "35bb7e86-37d0-4929-a7f2-98c5d90c1055",
         },
       ]
     : [],

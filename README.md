@@ -42,3 +42,20 @@ Tür kontrolü ve üretim derlemesi başarılı.
 Satış kaydı, kuruş hassasiyeti, iptal, hatalı giriş ve tekrar güvenliği denendi.
 Stok kaydı, giriş/çıkış, yetersiz stok, tekrar güvenliği ve eşzamanlı çıkış denendi.
 Yerel önizlemede ekranlar kontrol edildi.
+
+## Cloudflare / GitHub yayını
+
+Cloudflare Worker adı: elithomebosch. D1 veri tabanı: elithomebosch-db.
+Build komutu: npm run build
+Deploy komutu: npm run deploy
+
+Deploy komutu bekleyen SQL değişikliklerini uygular, ardından Worker'ı yayınlar.
+GitHub deposunda veya yapılandırma dosyalarında şifre bulunmaz.
+Cloudflare Worker > Settings > Runtime variables and secrets bölümünde Secret türünde ELIT_HOME_PASSWORD tanımlanmalıdır.
+Bu parola en az 14 karakter olmalıdır; kullanıcı tarafından girilir.
+ADMIN_EMAIL, vite.config.ts içinde mağaza sahibinin e-postası olarak tanımlıdır.
+Kurulum eksikse yalnızca giriş hazırlık ekranı görünür; satış ve stok API'leri erişimi reddeder.
+Canlı giriş, güvenli HttpOnly/Secure/SameSite=Strict oturum çerezi ve D1 oturum kaydı kullanır.
+Şifre değişince eski oturumlar geçersiz olur. Hatalı girişler IP başına 15 dakikada 10 denemeyle sınırlıdır.
+Tek mağaza sahibi hesabı desteklenir; herkese açık kayıt ve personel rolleri yoktur.
+Kart gerektiren Zero Trust/Access planı kullanılmaz.

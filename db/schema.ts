@@ -14,3 +14,9 @@ export const stockMoves = sqliteTable('stock_moves', {
  id:text('id').primaryKey(),owner:text('owner').notNull(),productId:text('product_id').notNull().references(()=>products.id),
  delta:integer('delta').notNull(),reason:text('reason').notNull(),createdAt:text('created_at').notNull(),
 });
+export const sessions = sqliteTable('sessions', {
+ tokenHash:text('token_hash').primaryKey(),email:text('email').notNull(),expiresAt:integer('expires_at').notNull(),
+});
+export const loginAttempts = sqliteTable('login_attempts', {
+ key:text('key').primaryKey(),attempts:integer('attempts').notNull().default(0),expiresAt:integer('expires_at').notNull(),
+});
