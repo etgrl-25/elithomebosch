@@ -8,9 +8,11 @@ config.workers_dev=true;
 config.preview_urls=false;
 writeFileSync(configPath,JSON.stringify(config,null,2));
 for(const args of [
- ['d1','migrations','apply','DB','--remote','--config',configPath,'--yes'],
+ ['d1','migrations','apply','DB','--remote','--config',configPath],
  ['deploy','--config',configPath]
 ]){
  const result=spawnSync(process.execPath,[resolve('node_modules/wrangler/bin/wrangler.js'),...args],{stdio:'inherit',env:process.env});
  if(result.status!==0)process.exit(result.status||1);
 }
+
+
