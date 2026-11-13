@@ -1,13 +1,24 @@
 import {getChatGPTUser} from '../../chatgpt-auth';
 import {getDb} from '../../../db';
 import {sales} from '../../../db/schema';
-import {and,eq,desc} from 'drizzle-orm';
+import {and,eq,desc,gte,lt} from 'drizzle-orm';
 import {z} from 'zod';
 const input=z.object({id:z.string().uuid(),amount:z.number().int().positive().max(10000000000),payment:z.enum(['Nakit','Kart','Havale','WebPOS']),installments:z.number().int().min(1).max(12).default(1),note:z.string().trim().max(200),soldAt:z.string().datetime().refine(v=>Date.parse(v)<=Date.now()+60000)});
 export async function GET(){
  const user=await getChatGPTUser();if(!user)return Response.json({error:'Devam etmek için giriş yapın.'},{status:401});
- const rows=await getDb().select().from(sales).where(eq(sales.owner,user.userId)).orderBy(desc(sales.soldAt));
- return Response.json(rows,{headers:{'Cache-Control':'no-store'}});
+ const canViewAll = user.email.trim().toLowerCase() === 'ertugrulerturann@gmail.com';
+ const month = new Intl.DateTimeFormat('sv-SE', {timeZone: 'Europe/Istanbul', year: 'numeric', month: '2-digit'}).format(new Date());
+ const [year, monthNumber] = month.split('-').map(Number);
+ const nextMonth = new Date(Date.UTC(year, monthNumber, 1)).toISOString().slice(0, 7);
+ const monthStart = new Date(`${month}-01T00:00:00+03:00`).toISOString();
+ const monthEnd = new Date(`${nextMonth}-01T00:00:00+03:00`).toISOString();
+ const owner = eq(sales.owner, user.userId);
+ const scope = canViewAll ? owner : and(owner, gte(sales.soldAt, monthStart), lt(sales.soldAt, monthEnd));
+ const rows = await getDb().select().from(sales).where(scope).orderBy(desc(sales.soldAt));
+ return Response.json(rows, {headers: {
+  'Cache-Control': 'no-store',
+  'X-Sales-Period': canViewAll ? 'all' : month,
+ }});
 }
 export async function POST(req:Request){
  const user=await getChatGPTUser();if(!user)return Response.json({error:'Giriş gerekli.'},{status:401});
